@@ -1,0 +1,38 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "ai-terminal-pro",
+  "outputfilename": "ai-terminal-pro",
+  "frontend": {
+    "dir": "./frontend",
+    "install": "npm install",
+    "build": "npm run build",
+    "package": "npm run build"
+  },
+  "assetdir": "./frontend/dist",
+  "wailsjsdir": "./frontend/src/wailsjs",
+  "build": {
+    "dir": "./build",
+    "platform": {
+      "windows": {
+        "arch": ["amd64"]
+      },
+      "darwin": {
+        "arch": ["amd64", "arm64"]
+      },
+      "linux": {
+        "arch": ["amd64"]
+      }
+    }
+  },
+  "author": {
+    "name": "Elias Owis",
+    "email": "elias@engelias.website"
+  },
+  "info": {
+    "company": "EClaw AI",
+    "productName": "AI Terminal Pro",
+    "productVersion": "1.0.0",
+    "copyright": "© 2026 EClaw AI",
+    "comments": "AI-Enhanced Cross-Platform Terminal"
+  }
+}
