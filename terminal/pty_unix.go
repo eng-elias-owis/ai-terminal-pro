@@ -11,6 +11,14 @@ import (
 	"github.com/creack/pty"
 )
 
+// ShellInfo represents a detected shell (for cross-platform compatibility)
+type ShellInfo struct {
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
 // PTYSession represents a pseudo-terminal session
 type PTYSession struct {
 	PTY    *os.File
@@ -139,4 +147,72 @@ func (s *PTYSession) GetOSType() string {
 // IsWindows returns true if running on Windows
 func (s *PTYSession) IsWindows() bool {
 	return s.osType == "windows"
+}
+
+// GetAvailableShells returns all installed shells on the system (Unix version)
+func GetAvailableShells() []ShellInfo {
+	var shells []ShellInfo
+
+	// Check for zsh
+	if path, err := exec.LookPath("zsh"); err == nil {
+		shells = append(shells, ShellInfo{
+			Name:        "Zsh",
+			Path:        path,
+			Type:        "zsh",
+			Description: "Z shell",
+		})
+	}
+
+	// Check for bash
+	if path, err := exec.LookPath("bash"); err == nil {
+		shells = append(shells, ShellInfo{
+			Name:        "Bash",
+			Path:        path,
+			Type:        "bash",
+			Description: "Bourne Again Shell",
+		})
+	}
+
+	// Check for fish
+	if path, err := exec.LookPath("fish"); err == nil {
+		shells = append(shells, ShellInfo{
+			Name:        "Fish",
+			Path:        path,
+			Type:        "fish",
+			Description: "Friendly Interactive Shell",
+		})
+	}
+
+	// Fallback to sh
+	if path, err := exec.LookPath("sh"); err == nil {
+		shells = append(shells, ShellInfo{
+			Name:        "Sh",
+			Path:        path,
+			Type:        "sh",
+			Description: "Bourne Shell",
+		})
+	}
+
+	return shells
+}
+
+// NewPTYSessionWithShell creates a session with a specific shell (Unix version)
+func NewPTYSessionWithShell(shellPath string) (*PTYSession, error) {
+	session := &PTYSession{
+		shell:  shellPath,
+		osType: runtime.GOOS,
+	}
+
+	cmd := exec.Command(shellPath, "-l")
+	cmd.Env = os.Environ()
+
+	ptmx, err := pty.Start(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start pty: %w", err)
+	}
+
+	session.PTY = ptmx
+	session.cmd = cmd
+
+	return session, nil
 }

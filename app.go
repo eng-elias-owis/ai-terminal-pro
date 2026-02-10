@@ -223,3 +223,29 @@ func (a *App) GetShell() string {
 	}
 	return a.terminal.GetShell()
 }
+
+// GetAvailableShells returns all installed shells on the system
+func (a *App) GetAvailableShells() []terminal.ShellInfo {
+	return terminal.GetAvailableShells()
+}
+
+// RestartTerminalWithShell restarts the terminal with a specific shell
+func (a *App) RestartTerminalWithShell(shellPath string) error {
+	// Close current terminal
+	if a.terminal != nil {
+		a.terminal.Close()
+	}
+
+	// Create new terminal with selected shell
+	newTerminal, err := terminal.NewPTYSessionWithShell(shellPath)
+	if err != nil {
+		return fmt.Errorf("failed to start terminal with %s: %w", shellPath, err)
+	}
+
+	a.terminal = newTerminal
+	
+	// Restart output reader
+	go a.readTerminalOutput()
+	
+	return nil
+}
