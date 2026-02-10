@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"runtime"
+	"time"
 
 	"ai-terminal-pro/ai"
 	"ai-terminal-pro/config"
 	"ai-terminal-pro/security"
 	"ai-terminal-pro/terminal"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -52,11 +53,39 @@ func (a *App) OnStartup(ctx context.Context) {
 		return
 	}
 	a.terminal = ptySession
+
+	// Start goroutine to read PTY output and emit to frontend
+	go a.readTerminalOutput()
 }
 
 // OnDomReady is called after front-end resources have been loaded
 func (a *App) OnDomReady(ctx context.Context) {
 	// Frontend is ready
+}
+
+// readTerminalOutput continuously reads from PTY and emits events to frontend
+func (a *App) readTerminalOutput() {
+	buf := make([]byte, 4096)
+	for {
+		if a.terminal == nil {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		
+		n, err := a.terminal.Read(buf)
+		if err != nil {
+			// PTY closed or error
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		
+		if n > 0 {
+			// Emit terminal output event to frontend
+			runtime.EventsEmit(a.ctx, "terminal-output", string(buf[:n]))
+		}
+		
+		time.Sleep(10 * time.Millisecond) // Small delay to prevent CPU spinning
+	}
 }
 
 // OnBeforeClose is called when the application is about to quit
@@ -80,7 +109,7 @@ func (a *App) Greet(name string) string {
 
 // GetOS returns the current operating system
 func (a *App) GetOS() string {
-	return runtime.GOOS
+	return a.settings.GetOSType()
 }
 
 // GenerateCommand generates a terminal command using AI
