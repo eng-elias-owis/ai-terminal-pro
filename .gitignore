@@ -1,0 +1,56 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+ai-terminal-pro
+*.out
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.cover
+*.cov
+
+# Dependency directories
+vendor/
+node_modules/
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build directories
+build/
+dist/
+bin/
+
+# Config files with secrets
+config.json
+.env
+
+# Logs
+*.log
+
+# Temporary files
+.tmp/
+tmp/
+*.tmp
+
+# Wails
+frontend/dist/
+frontend/wailsjs/
+
+# Opencode
+.opencode-task.md

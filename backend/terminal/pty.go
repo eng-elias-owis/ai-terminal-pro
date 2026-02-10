@@ -5,14 +5,13 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 
 	"github.com/creack/pty"
 )
 
 // PTYSession represents a pseudo-terminal session
 type PTYSession struct {
-	pty    *os.File
+	PTY    *os.File
 	cmd    *exec.Cmd
 	shell  string
 	osType string
@@ -88,7 +87,7 @@ func (s *PTYSession) start() error {
 		return fmt.Errorf("failed to start pty: %w", err)
 	}
 
-	s.pty = ptmx
+	s.PTY = ptmx
 	s.cmd = cmd
 
 	return nil
@@ -96,17 +95,17 @@ func (s *PTYSession) start() error {
 
 // Write sends input to the PTY
 func (s *PTYSession) Write(data []byte) (int, error) {
-	return s.pty.Write(data)
+	return s.PTY.Write(data)
 }
 
 // Read reads output from the PTY
 func (s *PTYSession) Read(p []byte) (int, error) {
-	return s.pty.Read(p)
+	return s.PTY.Read(p)
 }
 
 // Resize updates the terminal size
 func (s *PTYSession) Resize(rows, cols int) error {
-	return pty.Setsize(s.pty, &pty.Winsize{
+	return pty.Setsize(s.PTY, &pty.Winsize{
 		Rows: uint16(rows),
 		Cols: uint16(cols),
 	})
@@ -114,7 +113,7 @@ func (s *PTYSession) Resize(rows, cols int) error {
 
 // Close terminates the PTY session
 func (s *PTYSession) Close() error {
-	if err := s.pty.Close(); err != nil {
+	if err := s.PTY.Close(); err != nil {
 		return err
 	}
 	return s.cmd.Wait()
