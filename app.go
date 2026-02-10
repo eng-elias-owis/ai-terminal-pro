@@ -50,9 +50,12 @@ func (a *App) OnStartup(ctx context.Context) {
 	ptySession, err := terminal.NewPTYSession()
 	if err != nil {
 		fmt.Printf("Failed to start terminal: %v\n", err)
+		// Emit error event to frontend
+		runtime.EventsEmit(ctx, "terminal-error", fmt.Sprintf("Failed to start terminal: %v", err))
 		return
 	}
 	a.terminal = ptySession
+	fmt.Printf("Terminal started successfully with shell: %s\n", ptySession.GetShell())
 
 	// Start goroutine to read PTY output and emit to frontend
 	go a.readTerminalOutput()
@@ -66,6 +69,8 @@ func (a *App) OnDomReady(ctx context.Context) {
 // readTerminalOutput continuously reads from PTY and emits events to frontend
 func (a *App) readTerminalOutput() {
 	buf := make([]byte, 4096)
+	fmt.Println("Starting terminal output reader goroutine...")
+	
 	for {
 		if a.terminal == nil {
 			time.Sleep(100 * time.Millisecond)
@@ -74,18 +79,27 @@ func (a *App) readTerminalOutput() {
 		
 		n, err := a.terminal.Read(buf)
 		if err != nil {
-			// PTY closed or error
+			// PTY closed or error - only log once to avoid spam
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		
 		if n > 0 {
+			data := string(buf[:n])
+			fmt.Printf("PTY output (%d bytes): %q\n", n, data[:min(n, 50)])
 			// Emit terminal output event to frontend
-			runtime.EventsEmit(a.ctx, "terminal-output", string(buf[:n]))
+			runtime.EventsEmit(a.ctx, "terminal-output", data)
 		}
 		
 		time.Sleep(10 * time.Millisecond) // Small delay to prevent CPU spinning
 	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // OnBeforeClose is called when the application is about to quit
@@ -173,7 +187,11 @@ func (a *App) WriteToTerminal(data string) error {
 	if a.terminal == nil {
 		return fmt.Errorf("terminal not initialized")
 	}
+	fmt.Printf("WriteToTerminal: %q\n", data)
 	_, err := a.terminal.Write([]byte(data))
+	if err != nil {
+		fmt.Printf("WriteToTerminal error: %v\n", err)
+	}
 	return err
 }
 

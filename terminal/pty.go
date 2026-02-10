@@ -73,7 +73,12 @@ func (s *PTYSession) start() error {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command(s.shell)
+		// On Windows, use cmd.exe with special flags for better compatibility
+		if s.shell == "cmd" {
+			cmd = exec.Command("cmd.exe", "/Q", "/K", "prompt $P$G")
+		} else {
+			cmd = exec.Command(s.shell, "-NoExit", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8")
+		}
 	default:
 		cmd = exec.Command(s.shell, "-l") // Login shell
 	}
@@ -127,4 +132,9 @@ func (s *PTYSession) GetShell() string {
 // GetOSType returns the operating system
 func (s *PTYSession) GetOSType() string {
 	return s.osType
+}
+
+// IsWindows returns true if running on Windows
+func (s *PTYSession) IsWindows() bool {
+	return s.osType == "windows"
 }
