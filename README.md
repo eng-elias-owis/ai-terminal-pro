@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org)
 [![React Version](https://img.shields.io/badge/react-18-blue.svg)](https://reactjs.org)
+[![Wails](https://img.shields.io/badge/wails-v2.11-purple.svg)](https://wails.io)
 
 **AI-Enhanced Cross-Platform Terminal Application**
 
@@ -56,9 +57,20 @@ AI Terminal Pro transforms traditional terminal usage by adding AI-powered comma
 
 ### Prerequisites
 
-- Go 1.21 or later
-- Node.js 18 or later
-- Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- **Go 1.21** or later
+- **Node.js 18** or later
+- **Wails CLI**: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- **Linux Desktop Dependencies** (for Linux builds):
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install libgtk-3-dev libwebkit2gtk-4.0-dev
+  
+  # Fedora
+  sudo dnf install gtk3-devel webkit2gtk3-devel
+  
+  # Arch
+  sudo pacman -S gtk3 webkit2gtk
+  ```
 
 ### Installation
 
@@ -68,8 +80,7 @@ git clone https://github.com/EngEliasOwis/ai-terminal-pro.git
 cd ai-terminal-pro
 
 # Install Go dependencies
-cd backend && go mod tidy
-cd ..
+go mod tidy
 
 # Install Node dependencies
 cd frontend && npm install
@@ -82,29 +93,97 @@ wails dev
 wails build
 ```
 
-### Deployment
+### Alternative: CLI-Only Version
 
-1. **Deploy LiteLLM Proxy to HuggingFace Spaces:**
-   ```bash
-   cd deploy/litellm
-   # Follow README.md for HF Spaces deployment
-   ```
+For headless environments or testing without GUI:
 
-2. **Create Supabase Database:**
-   - Sign up at https://supabase.com
-   - Create new project (free tier)
-   - Copy connection string to HF Spaces secrets
+```bash
+# Build CLI version
+go build -o ai-terminal-pro .
 
-3. **Configure HuggingFace Dedicated Endpoint:**
-   - Deploy your Qwen3-0.6B fine-tuned model
-   - Get endpoint URL
-   - Add to HF Spaces secrets
+# Run tests
+./ai-terminal-pro -test
+
+# Setup configuration
+./ai-terminal-pro -setup
+```
+
+## 📁 Project Structure
+
+```
+ai-terminal-pro/
+├── go.mod              # Go module (root level)
+├── go.sum              # Go dependencies
+├── main.go             # Wails entry point
+├── app.go              # Wails app lifecycle
+├── wails.json          # Wails configuration
+│
+├── ai/                 # LiteLLM AI client
+│   └── client.go
+├── config/             # Settings management
+│   └── settings.go
+├── security/           # Command validation
+│   └── validator.go
+├── terminal/           # PTY management
+│   └── pty.go
+│
+├── frontend/           # React + TypeScript
+│   ├── index.html      # Vite entry point
+│   ├── package.json    # NPM dependencies
+│   ├── src/            # React components
+│   │   ├── App.tsx
+│   │   ├── components/
+│   │   └── styles/
+│   └── dist/           # Build output (embedded)
+│
+├── deploy/             # Deployment configs
+│   └── litellm/        # HF Spaces setup
+│       ├── config.yaml
+│       ├── Dockerfile
+│       └── README.md
+│
+├── docs/               # Documentation
+│   ├── architecture.md
+│   └── security.md
+│
+├── tests/              # Test suites
+├── BUILD.md            # Detailed build instructions
+└── README.md           # This file
+```
+
+## 🚀 Deployment
+
+### 1. Deploy LiteLLM Proxy to HuggingFace Spaces
+
+```bash
+cd deploy/litellm
+# Follow README.md for HF Spaces deployment
+```
+
+**Required Environment Variables:**
+- `HF_TOKEN` - Your HuggingFace token
+- `LITELLM_MASTER_KEY` - Admin key for dashboard
+- `DATABASE_URL` - Supabase PostgreSQL connection
+
+### 2. Create Supabase Database
+
+1. Sign up at https://supabase.com
+2. Create new project (free tier - 500MB storage)
+3. Get connection string from Settings → Database
+4. Add to HF Spaces secrets
+
+### 3. Configure HuggingFace Dedicated Endpoint
+
+1. Deploy your Qwen3-0.6B fine-tuned model
+2. Enable scale-to-zero for cost savings
+3. Copy endpoint URL to HF Spaces secrets
 
 ## 📖 Documentation
 
-- [Architecture Overview](docs/architecture.md)
-- [Security Model](docs/security.md)
-- [Deployment Guide](deploy/litellm/README.md)
+- **[BUILD.md](BUILD.md)** - Detailed build instructions and requirements
+- **[docs/architecture.md](docs/architecture.md)** - System architecture overview
+- **[docs/security.md](docs/security.md)** - Security model and access control
+- **[deploy/litellm/README.md](deploy/litellm/README.md)** - Deployment guide
 
 ## 🔒 Security
 
@@ -136,9 +215,45 @@ All AI-generated commands pass through security validation:
 
 *Cost varies by usage (scale-to-zero saves 50-90%)
 
+## 🛠️ Development
+
+### Build Commands
+
+```bash
+# Development (with hot reload)
+wails dev
+
+# Build for current platform
+wails build
+
+# Build for specific platform
+wails build -platform linux/amd64
+wails build -platform windows/amd64
+wails build -platform darwin/amd64
+
+# Build CLI version only
+go build .
+```
+
+### Testing
+
+```bash
+# Run component tests
+./ai-terminal-pro -test
+
+# Test CLI mode
+./ai-terminal-pro -generate "list all files"
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📝 License
 
@@ -152,8 +267,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Wails** - Go + Webview framework
 - **xterm.js** - Terminal emulator
 
+## 📧 Contact
+
+- **Author:** Elias Owis
+- **Email:** elias@engelias.website
+- **Project:** https://github.com/eng-elias-owis/ai-terminal-pro
+
 ---
 
 Built with ❤️ by Elias Owis (EClaw)
 
-Module 2 Project - LLM Engineering & Deployment Certification
+**Module 2 Project - LLM Engineering & Deployment Certification**
