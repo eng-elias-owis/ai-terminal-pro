@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Terminal } from './components/Terminal'
 import { AIModal } from './components/AIModal'
 import { Settings } from './components/Settings'
@@ -16,7 +16,7 @@ function App() {
     setShowAIModal(false)
   }, [])
 
-  const handleExecuteCommand = useCallback((command: string) => {
+  const handleExecuteCommand = useCallback((_command: string) => {
     // Send command to terminal
     setShowAIModal(false)
   }, [])
