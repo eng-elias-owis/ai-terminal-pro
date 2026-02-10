@@ -134,3 +134,18 @@ func GetConfigDir() (string, error) {
 	}
 	return filepath.Dir(configPath), nil
 }
+
+// GetOSType returns the current operating system
+func (s *Settings) GetOSType() string {
+	return runtime.GOOS
+}
+
+// GetShell returns the default shell for the OS
+func (s *Settings) GetShell() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "powershell"
+	default:
+		return "bash"
+	}
+}
